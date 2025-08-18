@@ -5,18 +5,17 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>高爾夫球社報名表</title>
   <style>
-    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Noto Sans, "Helvetica Neue", Arial, "Apple Color Emoji", "Segoe UI Emoji"; 
-           margin: 0; padding: 24px; line-height: 1.6; }
-    .card { max-width: 560px; margin: 0 auto; padding: 20px; border-radius: 16px; box-shadow: 0 6px 24px rgba(0,0,0,.08); }
-    h2 { margin-top: 0; }
-    label { display: block; margin: 12px 0 4px; font-weight: 600; }
-    input, select, textarea { width: 100%; padding: 12px; border-radius: 10px; border: 1px solid #ccc; font-size: 16px; }
-    button { width: 100%; padding: 14px; border: 0; border-radius: 12px; font-size: 16px; font-weight: 700; cursor: pointer; }
-    .btn { background: #06c755; color: #fff; margin-top: 16px; }
-    .muted { color: #666; font-size: 14px; }
-    .hidden { display: none; }
-    .success { background: #e8f5ee; border: 1px solid #b7e0c8; padding: 12px; border-radius: 10px; margin-top: 12px; }
-    .error { background: #fdecea; border: 1px solid #f5c6cb; padding: 12px; border-radius: 10px; margin-top: 12px; color: #b00020; }
+    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Noto Sans, "Helvetica Neue", Arial; margin:0; padding:24px; line-height:1.6;}
+    .card { max-width:560px; margin:0 auto; padding:20px; border-radius:16px; box-shadow:0 6px 24px rgba(0,0,0,.08);}
+    h2 { margin-top:0;}
+    label { display:block; margin:12px 0 4px; font-weight:600;}
+    input { width:100%; padding:12px; border-radius:10px; border:1px solid #ccc; font-size:16px;}
+    button { width:100%; padding:14px; border:0; border-radius:12px; font-size:16px; font-weight:700; cursor:pointer;}
+    .btn { background:#06c755; color:#fff; margin-top:16px;}
+    .muted { color:#666; font-size:14px;}
+    .hidden { display:none;}
+    .success { background:#e8f5ee; border:1px solid #b7e0c8; padding:12px; border-radius:10px; margin-top:12px;}
+    .error { background:#fdecea; border:1px solid #f5c6cb; padding:12px; border-radius:10px; margin-top:12px; color:#b00020;}
   </style>
 </head>
 <body>
@@ -37,7 +36,7 @@
       <label>可練球時段</label>
       <input type="text" name="timeslot" required placeholder="平日晚間、假日白天…" />
 
-      <!-- 隱藏欄位：由 LIFF 自動填入 -->
+      <!-- 隱藏欄位：LIFF 自動填入 -->
       <input type="hidden" name="userId" id="userId" />
       <input type="hidden" name="displayName" id="displayName" />
       <input type="hidden" name="pictureUrl" id="pictureUrl" />
@@ -54,32 +53,21 @@
     <div id="err" class="error hidden"></div>
   </div>
 
-  <!-- LIFF v2 SDK -->
   <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
   <script>
-    // TODO: 替換為你的 LIFF ID 與 Apps Script Web App URL
     const LIFF_ID = "2007934306-M0yXAdNm";
     const APPS_SCRIPT_ENDPOINT = "https://script.google.com/macros/s/AKfycbyewuwaCyWnf9aDmyaa1aVIpwSFfiPNanOFzLqX1HAmrDkE2SoJ24KZodAlsD81791o/exec";
 
     const $ = (id) => document.getElementById(id);
-
-    function showAlert(msg, type = "info") {
-      const box = $("alert");
-      box.className = type === "error" ? "error" : "success";
-      box.textContent = msg;
-      box.classList.remove("hidden");
-      setTimeout(() => box.classList.add("hidden"), 4000);
-    }
 
     async function initLIFF() {
       try {
         $("status").textContent = "LIFF 初始化中…";
         await liff.init({ liffId: LIFF_ID });
 
-        // 如未登入，先登入（支援於外部瀏覽器測試）
         if (!liff.isLoggedIn()) {
           liff.login();
-          return; // 重新導回後再繼續
+          return;
         }
 
         const profile = await liff.getProfile();
@@ -89,9 +77,8 @@
 
         $("status").textContent = "已取得 LINE 帳號資訊，請完成表單後送出。";
       } catch (err) {
-        $("err").textContent = "LIFF 初始化失敗：" + (err && err.message ? err.message : err);
+        $("err").textContent = "LIFF 初始化失敗：" + (err.message || err);
         $("err").classList.remove("hidden");
-        $("status").textContent = "";
       }
     }
 
@@ -101,28 +88,25 @@
 
       const formData = new FormData(e.target);
 
-try {
-  const res = await fetch(APPS_SCRIPT_ENDPOINT, {
-    method: "POST",
-    body: formData,  // ✅ 直接丟 FormData 就好
-  });
+      try {
+        const res = await fetch(APPS_SCRIPT_ENDPOINT, { method: "POST", body: formData });
+        const result = await res.json();
 
-  if (!res.ok) {
-    const t = await res.text();
-    throw new Error("伺服器錯誤：" + t);
-  }
+        if (!result.ok) throw new Error(result.error || "未知錯誤");
 
-  $("regForm").classList.add("hidden");
-  $("done").classList.remove("hidden");
-  $("status").textContent = "";
-} catch (err) {
-  $("err").textContent = "送出失敗：" + (err && err.message ? err.message : err);
-  $("err").classList.remove("hidden");
-  $("status").textContent = "";
-}
+        $("regForm").classList.add("hidden");
+        $("done").classList.remove("hidden");
+        $("status").textContent = "";
+      } catch (err) {
+        $("err").textContent = "送出失敗：" + (err.message || err);
+        $("err").classList.remove("hidden");
+        $("status").textContent = "";
+      }
+    }
 
     document.getElementById("regForm").addEventListener("submit", submitForm);
     initLIFF();
   </script>
 </body>
 </html>
+
