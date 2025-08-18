@@ -100,36 +100,26 @@
       $("status").textContent = "送出中…";
 
       const formData = new FormData(e.target);
-      const data = Object.fromEntries(formData.entries());
 
-      if (!data.userId) {
-        $("err").textContent = "無法取得使用者 ID，請在 LINE 內重新開啟此頁面。";
-        $("err").classList.remove("hidden");
-        $("status").textContent = "";
-        return;
-      }
+try {
+  const res = await fetch(APPS_SCRIPT_ENDPOINT, {
+    method: "POST",
+    body: formData,  // ✅ 直接丟 FormData 就好
+  });
 
-      try {
-        const res = await fetch(APPS_SCRIPT_ENDPOINT, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(data),
-        });
+  if (!res.ok) {
+    const t = await res.text();
+    throw new Error("伺服器錯誤：" + t);
+  }
 
-        if (!res.ok) {
-          const t = await res.text();
-          throw new Error("伺服器錯誤：" + t);
-        }
-
-        $("regForm").classList.add("hidden");
-        $("done").classList.remove("hidden");
-        $("status").textContent = "";
-      } catch (err) {
-        $("err").textContent = "送出失敗：" + (err && err.message ? err.message : err);
-        $("err").classList.remove("hidden");
-        $("status").textContent = "";
-      }
-    }
+  $("regForm").classList.add("hidden");
+  $("done").classList.remove("hidden");
+  $("status").textContent = "";
+} catch (err) {
+  $("err").textContent = "送出失敗：" + (err && err.message ? err.message : err);
+  $("err").classList.remove("hidden");
+  $("status").textContent = "";
+}
 
     document.getElementById("regForm").addEventListener("submit", submitForm);
     initLIFF();
