@@ -52,17 +52,13 @@ const LIFF_ID = "2007934306-M0yXAdNm";
 const APPS_SCRIPT_ENDPOINT = "https://script.google.com/macros/s/AKfycbylVvtmGGe2LgF3yoJhF94LNnAQV44Ps1O042GZkL5stZUK1DTFNToWfe8WmqQPJQps/exec";
 
 async function initLIFF() {
-  try {
-    await liff.init({ liffId: LIFF_ID });
-    if (!liff.isLoggedIn()) liff.login();
+  await liff.init({ liffId: LIFF_ID });
+  if (!liff.isLoggedIn()) liff.login();
 
-    const profile = await liff.getProfile();
-    document.getElementById("userId").value = profile.userId || "";
-    document.getElementById("displayName").value = profile.displayName || "";
-    document.getElementById("pictureUrl").value = profile.pictureUrl || "";
-  } catch (err) {
-    console.error("LIFF 初始化失敗:", err);
-  }
+  const profile = await liff.getProfile();
+  document.getElementById("userId").value = profile.userId || "";
+  document.getElementById("displayName").value = profile.displayName || "";
+  document.getElementById("pictureUrl").value = profile.pictureUrl || "";
 }
 
 document.getElementById("regForm").addEventListener("submit", async (e) => {
@@ -78,11 +74,11 @@ document.getElementById("regForm").addEventListener("submit", async (e) => {
     document.getElementById("regForm").classList.add("hidden");
     alert("已送出！請回到 LINE 查看訊息");
   } catch (err) {
-    document.getElementById("err").textContent = "送出失敗：" + err.message;
-    document.getElementById("err").classList.remove("hidden");
+    const errDiv = document.getElementById("err");
+    errDiv.textContent = "送出失敗：" + err.message;
+    errDiv.classList.remove("hidden");
   }
 });
 
 initLIFF();
 </script>
-</html>
