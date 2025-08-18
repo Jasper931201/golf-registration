@@ -43,77 +43,74 @@
 
       <button class="btn" type="submit">送出報名</button>
       <div id="status" class="muted"></div>
-      <div id="alert" class="hidden"></div>
+      <div id="err" class="error hidden"></div>
     </form>
 
     <div id="done" class="success hidden">
       已送出！請回到 LINE 與官方帳號對話視窗查看「正式群組連結」訊息。
     </div>
-
-    <div id="err" class="error hidden"></div>
   </div>
 
   <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
   <script>
-const LIFF_ID = "2007934306-M0yXAdNm";
-const APPS_SCRIPT_ENDPOINT = "https://script.google.com/macros/s/AKfycbyewuwaCyWnf9aDmyaa1aVIpwSFfiPNanOFzLqX1HAmrDkE2SoJ24KZodAlsD81791o/exec";
+    const LIFF_ID = "2007934306-M0yXAdNm";
+    const APPS_SCRIPT_ENDPOINT = "https://script.google.com/macros/s/AKfycbyewuwaCyWnf9aDmyaa1aVIpwSFfiPNanOFzLqX1HAmrDkE2SoJ24KZodAlsD81791o/exec";
 
-const $ = (id) => document.getElementById(id);
+    const $ = id => document.getElementById(id);
 
-async function initLIFF() {
-  try {
-    $("status").textContent = "LIFF 初始化中…";
-    await liff.init({ liffId: LIFF_ID });
+    async function initLIFF() {
+      try {
+        $("status").textContent = "LIFF 初始化中…";
+        await liff.init({ liffId: LIFF_ID });
 
-    if (!liff.isLoggedIn()) { liff.login(); return; }
+        if (!liff.isLoggedIn()) {
+          liff.login();
+          return;
+        }
 
-    const profile = await liff.getProfile();
-    $("userId").value = profile.userId || "";
-    $("displayName").value = profile.displayName || "";
-    $("pictureUrl").value = profile.pictureUrl || "";
+        const profile = await liff.getProfile();
+        $("userId").value = profile.userId || "";
+        $("displayName").value = profile.displayName || "";
+        $("pictureUrl").value = profile.pictureUrl || "";
 
-    $("status").textContent = "已取得 LINE 帳號資訊，請完成表單後送出。";
-  } catch (err) {
-    $("err").textContent = "LIFF 初始化失敗：" + (err.message || err);
-    $("err").classList.remove("hidden");
-  }
-}
+        $("status").textContent = "已取得 LINE 帳號資訊，請完成表單後送出。";
+      } catch (err) {
+        $("err").textContent = "LIFF 初始化失敗：" + (err.message || err);
+        $("err").classList.remove("hidden");
+      }
+    }
 
-async function submitForm(e) {
-  e.preventDefault();
-  $("status").textContent = "送出中…";
+    async function submitForm(e) {
+      e.preventDefault();
+      $("status").textContent = "送出中…";
+      $("err").classList.add("hidden");
 
-  // JSON 組資料
-  const data = {
-    name: e.target.name.value,
-    exp_years: e.target.exp_years.value,
-    region: e.target.region.value,
-    timeslot: e.target.timeslot.value,
-    userId: e.target.userId.value,
-    displayName: e.target.displayName.value,
-    pictureUrl: e.target.pictureUrl.value
-  };
+      const formData = Object.fromEntries(new FormData(e.target));
 
-  try {
-    const res = await fetch(APPS_SCRIPT_ENDPOINT, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(data)
-    });
-    const result = await res.json();
+      try {
+        const res = await fetch(APPS_SCRIPT_ENDPOINT, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(formData)
+        });
 
-    if (!result.ok) throw new Error(result.error || "未知錯誤");
+        if (!res.ok) throw new Error("伺服器回應錯誤：" + res.status);
 
-    $("regForm").classList.add("hidden");
-    $("done").classList.remove("hidden");
-    $("status").textContent = "";
-  } catch (err) {
-    $("err").textContent = "送出失敗：" + (err.message || err);
-    $("err").classList.remove("hidden");
-    $("status").textContent = "";
-  }
-}
+        const result = await res.json();
+        if (!result.ok) throw new Error(result.error || "未知錯誤");
 
-document.getElementById("regForm").addEventListener("submit", submitForm);
-initLIFF();
-</script>
+        $("regForm").classList.add("hidden");
+        $("done").classList.remove("hidden");
+        $("status").textContent = "";
+      } catch (err) {
+        $("err").textContent = "送出失敗：" + (err.message || err);
+        $("err").classList.remove("hidden");
+        $("status").textContent = "";
+      }
+    }
+
+    document.getElementById("regForm").addEventListener("submit", submitForm);
+    initLIFF();
+  </script>
+</body>
+</html>
