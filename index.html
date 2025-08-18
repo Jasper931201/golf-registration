@@ -23,94 +23,66 @@
     <h2>高爾夫球社報名表</h2>
     <p class="muted">請於 LINE 內開啟此頁面以自動帶入您的帳號資訊。</p>
 
-    <form id="regForm">
-      <label>姓名</label>
-      <input type="text" name="name" required placeholder="王小明" />
+   <form id="regForm">
+  <label>姓名</label>
+  <input type="text" name="name" required placeholder="王小明" />
 
-      <label>球齡（年）</label>
-      <input type="number" name="exp_years" min="0" step="0.5" required placeholder="例如：1.5" />
+  <label>球齡（年）</label>
+  <input type="number" name="exp_years" min="0" step="0.5" required placeholder="例如：1.5" />
 
-      <label>常打球/練球地區</label>
-      <input type="text" name="region" required placeholder="台中、西屯、台中國際高爾夫練習場…" />
+  <label>常打球/練球地區</label>
+  <input type="text" name="region" required placeholder="台中、西屯…" />
 
-      <label>可練球時段</label>
-      <input type="text" name="timeslot" required placeholder="平日晚間、假日白天…" />
+  <label>可練球時段</label>
+  <input type="text" name="timeslot" required placeholder="平日晚間、假日白天…" />
 
-      <!-- 隱藏欄位：LIFF 自動填入 -->
-      <input type="hidden" name="userId" id="userId" />
-      <input type="hidden" name="displayName" id="displayName" />
-      <input type="hidden" name="pictureUrl" id="pictureUrl" />
+  <!-- 隱藏欄位 LIFF 自動填入 -->
+  <input type="hidden" name="userId" id="userId" />
+  <input type="hidden" name="displayName" id="displayName" />
+  <input type="hidden" name="pictureUrl" id="pictureUrl" />
 
-      <button class="btn" type="submit">送出報名</button>
-      <div id="status" class="muted"></div>
-      <div id="err" class="error hidden"></div>
-    </form>
+  <button type="submit">送出報名</button>
+  <div id="status"></div>
+  <div id="err" class="error hidden"></div>
+</form>
 
-    <div id="done" class="success hidden">
-      已送出！請回到 LINE 與官方帳號對話視窗查看「正式群組連結」訊息。
-    </div>
-  </div>
+<script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+<script>
+const LIFF_ID = "2007934306-M0yXAdNm";
+const APPS_SCRIPT_ENDPOINT = "https://script.google.com/macros/s/AKfycbylVvtmGGe2LgF3yoJhF94LNnAQV44Ps1O042GZkL5stZUK1DTFNToWfe8WmqQPJQps/exec";
 
-  <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
-  <script>
-    const LIFF_ID = "2007934306-M0yXAdNm";
-    const APPS_SCRIPT_ENDPOINT = "https://script.google.com/macros/s/AKfycbylVvtmGGe2LgF3yoJhF94LNnAQV44Ps1O042GZkL5stZUK1DTFNToWfe8WmqQPJQps/exec";
+async function initLIFF() {
+  try {
+    await liff.init({ liffId: LIFF_ID });
+    if (!liff.isLoggedIn()) liff.login();
 
-    const $ = id => document.getElementById(id);
+    const profile = await liff.getProfile();
+    document.getElementById("userId").value = profile.userId || "";
+    document.getElementById("displayName").value = profile.displayName || "";
+    document.getElementById("pictureUrl").value = profile.pictureUrl || "";
+  } catch (err) {
+    console.error("LIFF 初始化失敗:", err);
+  }
+}
 
-    async function initLIFF() {
-      try {
-        $("status").textContent = "LIFF 初始化中…";
-        await liff.init({ liffId: LIFF_ID });
+document.getElementById("regForm").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const formData = new FormData(e.target);
 
-        if (!liff.isLoggedIn()) {
-          liff.login();
-          return;
-        }
+  try {
+    const res = await fetch(APPS_SCRIPT_ENDPOINT, { method: "POST", body: formData });
+    const result = await res.json();
 
-        const profile = await liff.getProfile();
-        $("userId").value = profile.userId || "";
-        $("displayName").value = profile.displayName || "";
-        $("pictureUrl").value = profile.pictureUrl || "";
+    if (!result.ok) throw new Error(result.error || "未知錯誤");
 
-        $("status").textContent = "已取得 LINE 帳號資訊，請完成表單後送出。";
-      } catch (err) {
-        $("err").textContent = "LIFF 初始化失敗：" + (err.message || err);
-        $("err").classList.remove("hidden");
-      }
-    }
+    document.getElementById("regForm").classList.add("hidden");
+    alert("已送出！請回到 LINE 查看訊息");
+  } catch (err) {
+    document.getElementById("err").textContent = "送出失敗：" + err.message;
+    document.getElementById("err").classList.remove("hidden");
+  }
+});
 
-    async function submitForm(e) {
-      e.preventDefault();
-      $("status").textContent = "送出中…";
-      $("err").classList.add("hidden");
-
-      const formData = Object.fromEntries(new FormData(e.target));
-
-      try {
-        const res = await fetch(APPS_SCRIPT_ENDPOINT, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(formData)
-        });
-
-        if (!res.ok) throw new Error("伺服器回應錯誤：" + res.status);
-
-        const result = await res.json();
-        if (!result.ok) throw new Error(result.error || "未知錯誤");
-
-        $("regForm").classList.add("hidden");
-        $("done").classList.remove("hidden");
-        $("status").textContent = "";
-      } catch (err) {
-        $("err").textContent = "送出失敗：" + (err.message || err);
-        $("err").classList.remove("hidden");
-        $("status").textContent = "";
-      }
-    }
-
-    document.getElementById("regForm").addEventListener("submit", submitForm);
-    initLIFF();
-  </script>
-</body>
+initLIFF();
+</script>
 </html>
