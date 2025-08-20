@@ -25,16 +25,22 @@
 
    <form id="regForm">
   <label>姓名</label>
-  <input type="text" name="name" required placeholder="王小明" />
+      <input type="text" name="name" required placeholder="王小明" />
 
-  <label>球齡（年）</label>
-  <input type="number" name="exp_years" min="0" step="0.5" required placeholder="例如：1.5" />
+      <label>系級</label>
+      <input type="text" name="class_level" required placeholder="土木三乙" />
 
-  <label>常打球/練球地區</label>
-  <input type="text" name="region" required placeholder="台中、西屯…" />
+      <label>學號</label>
+      <input type="text" name="student_id" required placeholder="Dxxxxxxx" />
 
-  <label>可練球時段</label>
-  <input type="text" name="timeslot" required placeholder="平日晚間、假日白天…" />
+      <label>身分證(保保險用)</label>
+      <input type="text" name="id" required placeholder="Bxxxxxxxxx" />
+
+      <label>電話</label>
+      <input type="number" name="phone" required placeholder="09xxxxxxxx" />
+
+      <label>line(id)</label>
+      <input type="text" name="lineid" required placeholder="xxxx" /> 
 
   <!-- 隱藏欄位 LIFF 自動填入 -->
   <input type="hidden" name="userId" id="userId" />
@@ -49,7 +55,7 @@
 <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
 <script>
 const LIFF_ID = "2007934306-M0yXAdNm";
-const APPS_SCRIPT_ENDPOINT = "https://script.google.com/macros/s/AKfycbzYENcN_iNLgOT6QljfB4h7ymA5XzNnu2omq75GWBy5CNghMPrNIrMPJb_lVeE2mkHU/exec";
+const APPS_SCRIPT_ENDPOINT = "https://script.google.com/macros/s/AKfycbxwJsr2cCeF2j1vTgYwG62p3540talx-vFlqqicoyn66LKE_fjuawSnMO5xxf5OrC4o/exec";
 
 async function initLIFF() {
   await liff.init({ liffId: LIFF_ID });
