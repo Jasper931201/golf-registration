@@ -45,7 +45,10 @@
 
       <label>學號</label>
       <input type="text" name="student_id" required placeholder="Dxxxxxxx" />
-
+      
+      <label>出生年月日</label>
+      <input type="text" name="birthday" required placeholder="95/xx/xx" />
+      
       <label>身分證(僅供保險使用)</label>
       <input type="text" name="id" required placeholder="Bxxxxxxxxx" />
 
@@ -72,7 +75,7 @@
 <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
 <script>
 const LIFF_ID = "2007934306-M0yXAdNm";
-const APPS_SCRIPT_ENDPOINT = "https://script.google.com/macros/s/AKfycbxwJsr2cCeF2j1vTgYwG62p3540talx-vFlqqicoyn66LKE_fjuawSnMO5xxf5OrC4o/exec";
+const APPS_SCRIPT_ENDPOINT = "https://script.google.com/macros/s/AKfycbxeKQlDb8urlQix7krSQ-CtPigj6C_6o36T0bx3vBdmUkXPbDAOiVTnk_VzDboO264S/exec";
 
 async function initLIFF() {
   await liff.init({ liffId: LIFF_ID });
