@@ -25,7 +25,7 @@
 
     <!-- 同意書 -->
     <div id="consentSection">
-      <p>個人資料使用授權同意書</p>
+      <p><strong>個人資料使用授權同意書</strong></p>
       <p>逢甲高爾夫球社為辦理社團活動保險事宜，需建立社員個人資料，請您提供相關資料。您所提供之個人資料僅作為投保及保險聯繫之用。逢甲大學高爾夫球社相關承辦人將依「個人資料保護法」之規定，以誠實及信用之方法為之，不得逾越特定目的之必要範圍，並應與蒐集目的具有正當合理之關聯，且善盡維護與保密之責。</p>
       <p>本人同意將「姓名」、「身分證字號」、「出生年月日」、「手機號碼」提供予逢甲高爾夫球社辦理社團活動保險事宜之用。</p>
       <label>
@@ -45,10 +45,10 @@
 
       <label>學號</label>
       <input type="text" name="student_id" required placeholder="Dxxxxxxx" />
-      
+
       <label>出生年月日</label>
       <input type="text" name="birthday" required placeholder="95/xx/xx" />
-      
+
       <label>身分證(僅供保險使用)</label>
       <input type="text" name="id" required placeholder="Bxxxxxxxxx" />
 
@@ -79,7 +79,12 @@ const APPS_SCRIPT_ENDPOINT = "https://script.google.com/macros/s/AKfycbxeKQlDb8u
 
 async function initLIFF() {
   await liff.init({ liffId: LIFF_ID });
-  if (!liff.isLoggedIn()) liff.login();
+
+  // 修正跳針：只在未登入且在 LINE App 才呼叫 login
+  if (!liff.isLoggedIn() && liff.getOS() !== 'web') {
+    liff.login();
+    return;
+  }
 
   const profile = await liff.getProfile();
   document.getElementById("userId").value = profile.userId || "";
@@ -87,7 +92,7 @@ async function initLIFF() {
   document.getElementById("pictureUrl").value = profile.pictureUrl || "";
 }
 
-// 顯示表單前檢查同意書
+// 同意書選擇事件
 document.querySelectorAll('input[name="consent"]').forEach(radio => {
   radio.addEventListener('change', () => {
     if (document.querySelector('input[name="consent"]:checked').value === 'agree') {
@@ -98,11 +103,10 @@ document.querySelectorAll('input[name="consent"]').forEach(radio => {
   });
 });
 
-// 表單送出與 5 秒防重複
+// 表單送出
 document.getElementById("regForm").addEventListener("submit", async (e) => {
   e.preventDefault();
   const formData = new FormData(e.target);
-
   const submitBtn = e.target.querySelector('button[type="submit"]');
   submitBtn.disabled = true;
   submitBtn.textContent = "送出中…";
