@@ -23,8 +23,21 @@
     <h2>高爾夫球社報名表</h2>
     <p class="muted">請於 LINE 內開啟此頁面以自動帶入您的帳號資訊。</p>
 
-   <form id="regForm">
-  <label>姓名</label>
+    <!-- 同意書 -->
+    <div id="consentSection">
+      <p>個人資料使用授權同意書</p>
+      <p>逢甲高爾夫球社為辦理社團活動保險事宜，需建立社員個人資料，請您提供相關資料。您所提供之個人資料僅作為投保及保險聯繫之用。逢甲大學高爾夫球社相關承辦人將依「個人資料保護法」之規定，以誠實及信用之方法為之，不得逾越特定目的之必要範圍，並應與蒐集目的具有正當合理之關聯，且善盡維護與保密之責。</p>
+      <p>本人同意將「姓名」、「身分證字號」、「出生年月日」、「手機號碼」提供予逢甲高爾夫球社辦理社團活動保險事宜之用。</p>
+      <label>
+        <input type="radio" name="consent" value="agree" required> 同意
+      </label>
+      <label>
+        <input type="radio" name="consent" value="disagree"> 不同意
+      </label>
+    </div>
+
+    <form id="regForm" class="hidden">
+      <label>姓名</label>
       <input type="text" name="name" required placeholder="王小明" />
 
       <label>系級</label>
@@ -42,17 +55,19 @@
       <label>line(id)</label>
       <input type="text" name="lineid" required placeholder="xxxx" /> 
 
-     <p class="muted">"送出報名幫我按一次即可，請耐心等待伺服器運作</p>
+      <p class="muted">送出報名幫我按一次即可，請耐心等待伺服器運作</p>
 
-  <!-- 隱藏欄位 LIFF 自動填入 -->
-  <input type="hidden" name="userId" id="userId" />
-  <input type="hidden" name="displayName" id="displayName" />
-  <input type="hidden" name="pictureUrl" id="pictureUrl" />
+      <!-- 隱藏欄位 LIFF 自動填入 -->
+      <input type="hidden" name="userId" id="userId" />
+      <input type="hidden" name="displayName" id="displayName" />
+      <input type="hidden" name="pictureUrl" id="pictureUrl" />
 
-  <button type="submit">送出報名</button>
-  <div id="status"></div>
-  <div id="err" class="error hidden"></div>
-</form>
+      <button type="submit">送出報名</button>
+      <div id="status"></div>
+      <div id="err" class="error hidden"></div>
+      <div id="success" class="success hidden">已成功送出報名！請回到 LINE 查看訊息。</div>
+    </form>
+  </div>
 
 <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
 <script>
@@ -69,9 +84,28 @@ async function initLIFF() {
   document.getElementById("pictureUrl").value = profile.pictureUrl || "";
 }
 
+// 顯示表單前檢查同意書
+document.querySelectorAll('input[name="consent"]').forEach(radio => {
+  radio.addEventListener('change', () => {
+    if (document.querySelector('input[name="consent"]:checked').value === 'agree') {
+      document.getElementById("regForm").classList.remove("hidden");
+    } else {
+      document.getElementById("regForm").classList.add("hidden");
+    }
+  });
+});
+
+// 表單送出與 5 秒防重複
 document.getElementById("regForm").addEventListener("submit", async (e) => {
   e.preventDefault();
   const formData = new FormData(e.target);
+
+  const submitBtn = e.target.querySelector('button[type="submit"]');
+  submitBtn.disabled = true;
+  submitBtn.textContent = "送出中…";
+
+  document.getElementById("err").classList.add("hidden");
+  document.getElementById("success").classList.add("hidden");
 
   try {
     const res = await fetch(APPS_SCRIPT_ENDPOINT, { method: "POST", body: formData });
@@ -79,14 +113,23 @@ document.getElementById("regForm").addEventListener("submit", async (e) => {
 
     if (!result.ok) throw new Error(result.error || "未知錯誤");
 
-    document.getElementById("regForm").classList.add("hidden");
-    alert("已送出！請回到 LINE 查看訊息");
+    e.target.reset();
+    document.getElementById("success").classList.remove("hidden");
+    submitBtn.textContent = "送出報名";
+
   } catch (err) {
     const errDiv = document.getElementById("err");
     errDiv.textContent = "送出失敗：" + err.message;
     errDiv.classList.remove("hidden");
+    submitBtn.textContent = "送出報名";
   }
+
+  setTimeout(() => {
+    submitBtn.disabled = false;
+  }, 5000);
 });
 
 initLIFF();
 </script>
+</body>
+</html>
